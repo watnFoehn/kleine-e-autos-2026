@@ -9,7 +9,7 @@
   <script>tailwind.config={darkMode:'class'}</script>
 </head>
 <body class="min-h-screen bg-gray-100 transition-colors dark:bg-gray-900">
-<header class="bg-blue-600 py-6 text-white shadow-lg dark:bg-blue-800"><div class="mx-auto flex max-w-6xl items-center justify-between px-4"><div><h1 class="text-3xl font-bold">🚗⚡ Kleine E-Autos 2026</h1><p class="mt-1 text-blue-100">Das Erbe des legendären i10</p></div><button id="theme" type="button" class="rounded p-2 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-white" aria-label="Farbschema umschalten"><span id="theme-icon">🌙</span></button></div></header>
+<header class="bg-blue-600 py-6 text-white shadow-lg dark:bg-blue-800"><div class="mx-auto flex max-w-6xl items-center justify-between px-4"><div><h1 class="text-3xl font-bold">🚗⚡ Kleine E-Autos 2026</h1><p class="mt-1 text-blue-100">Das Erbe des legendären i10</p></div><button id="theme" type="button" class="rounded p-2 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-white" aria-label="Dunklen Modus aktivieren"><span id="theme-icon" aria-hidden="true">🌙</span></button></div></header>
 <main class="mx-auto max-w-6xl px-4 py-8">
 <div class="mb-6 flex items-center gap-4"><label for="sort" class="font-medium dark:text-white">Sortieren:</label><select id="sort" class="rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white"><option value="preis">Preis (günstigste zuerst)</option><option value="reichweite">Reichweite (höchste zuerst)</option><option value="laenge">Länge (kleinste zuerst)</option></select></div>
 <div id="cards" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="list"></div>
