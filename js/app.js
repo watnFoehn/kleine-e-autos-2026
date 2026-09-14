@@ -1,8 +1,11 @@
+let vehicles = [];
 let compareList = [];
 let lastFocusedElement = null;
 
 const price = (vehicle) => vehicle.herstellerrabatt ? vehicle.preisUVP - vehicle.herstellerrabatt : vehicle.preisUVP;
-const esc = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+const displayValue = (value, suffix = '') => value == null || value === '' ? '—' : `${value}${suffix}`;
+const formatDimensions = (vehicle) => `${[vehicle.laenge, vehicle.breite, vehicle.hoehe].map((value) => value == null ? '—' : value).join(' × ')} m`;
 
 function render() {
   const sort = document.getElementById('sort').value;
@@ -16,7 +19,7 @@ function render() {
       </div>
       <div class="mb-1 text-2xl font-bold text-blue-600 dark:text-blue-400">${vehicle.preisUVP.toLocaleString('de')} € <span class="text-sm font-normal text-gray-500">UVP</span></div>
       ${vehicle.herstellerrabatt ? `<div class="text-sm text-gray-600 dark:text-gray-400">− ${vehicle.herstellerrabatt.toLocaleString('de')} € Herstellerrabatt</div><div class="text-lg font-semibold text-green-600 dark:text-green-400">= ${price(vehicle).toLocaleString('de')} € mit Rabatt</div>` : ''}
-      <dl class="mt-4 space-y-2 text-sm">${[['Reichweite WLTP', `${vehicle.reichweiteWLTP} km`], ['Real', vehicle.reichweiteReal], ['Batterie', vehicle.batterie], ['Leistung', vehicle.leistung], ['DC-Laden', vehicle.ladeleistungDC], ['Maße', `${vehicle.laenge}×${vehicle.breite}×${vehicle.hoehe} m`], ['Kofferraum', `${vehicle.kofferraum} l`], ['Sitze / ISOFIX', `${vehicle.sitze} / ${vehicle.isofix}`]].map(([label, value]) => `<div class="flex justify-between gap-4"><dt class="text-gray-600 dark:text-gray-400">${label}</dt><dd class="font-medium text-right dark:text-white">${esc(value)}</dd></div>`).join('')}</dl>
+      <dl class="mt-4 space-y-2 text-sm">${[['Reichweite WLTP', displayValue(vehicle.reichweiteWLTP, ' km')], ['Real', displayValue(vehicle.reichweiteReal)], ['Batterie', displayValue(vehicle.batterie)], ['Leistung', displayValue(vehicle.leistung)], ['DC-Laden', displayValue(vehicle.ladeleistungDC)], ['Maße', formatDimensions(vehicle)], ['Kofferraum', displayValue(vehicle.kofferraum, ' l')], ['Sitze / ISOFIX', `${displayValue(vehicle.sitze)} / ${displayValue(vehicle.isofix)}`]].map(([label, value]) => `<div class="flex justify-between gap-4"><dt class="text-gray-600 dark:text-gray-400">${label}</dt><dd class="font-medium text-right dark:text-white">${esc(value)}</dd></div>`).join('')}</dl>
       <button type="button" data-name="${esc(vehicle.name)}" class="compare-btn mt-4 w-full rounded border py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${compareList.includes(vehicle.name) ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 dark:border-gray-600 dark:text-white'}" aria-pressed="${compareList.includes(vehicle.name)}">${compareList.includes(vehicle.name) ? '✓ Im Vergleich' : '+ Vergleichen'}</button>
     </article>`).join('');
   document.querySelectorAll('.compare-btn').forEach((button) => button.addEventListener('click', () => toggleCompare(button.dataset.name)));
@@ -42,10 +45,10 @@ function showCompare() {
     ['UVP', (v) => `${v.preisUVP.toLocaleString('de')} €`],
     ['Herstellerrabatt', (v) => v.herstellerrabatt ? `− ${v.herstellerrabatt.toLocaleString('de')} €` : '—'],
     ['Mit Rabatt', (v) => `${price(v).toLocaleString('de')} €`, (v) => price(v), 'low'],
-    ['Reichweite WLTP', (v) => `${v.reichweiteWLTP} km`, (v) => v.reichweiteWLTP, 'high'],
-    ['Real', (v) => v.reichweiteReal], ['Batterie', (v) => v.batterie], ['Leistung', (v) => v.leistung], ['DC-Laden', (v) => v.ladeleistungDC],
-    ['Länge', (v) => `${v.laenge} m`, (v) => v.laenge, 'low'], ['Breite', (v) => `${v.breite} m`], ['Höhe', (v) => `${v.hoehe} m`],
-    ['Kofferraum', (v) => `${v.kofferraum} l`, (v) => v.kofferraum, 'high'], ['Sitze', (v) => v.sitze], ['ISOFIX', (v) => v.isofix]
+    ['Reichweite WLTP', (v) => displayValue(v.reichweiteWLTP, ' km'), (v) => v.reichweiteWLTP, 'high'],
+    ['Real', (v) => displayValue(v.reichweiteReal)], ['Batterie', (v) => displayValue(v.batterie)], ['Leistung', (v) => displayValue(v.leistung)], ['DC-Laden', (v) => displayValue(v.ladeleistungDC)],
+    ['Länge', (v) => displayValue(v.laenge, ' m'), (v) => v.laenge, 'low'], ['Breite', (v) => displayValue(v.breite, ' m')], ['Höhe', (v) => displayValue(v.hoehe, ' m')],
+    ['Kofferraum', (v) => displayValue(v.kofferraum, ' l'), (v) => v.kofferraum, 'high'], ['Sitze', (v) => displayValue(v.sitze)], ['ISOFIX', (v) => displayValue(v.isofix)]
   ];
   document.getElementById('compare-content').innerHTML = `<table class="w-full text-sm"><thead><tr class="border-b dark:border-gray-700"><th class="p-2 text-left"></th>${selected.map((v) => `<th class="p-2 text-left font-bold">${esc(v.name)}</th>`).join('')}</tr></thead><tbody>${fields.map(([label, display, get, best]) => { let classes = selected.map(() => ''); if (get && best && selected.length > 1) { const values = selected.map(get); const target = best === 'high' ? Math.max(...values) : Math.min(...values); classes = values.map((value) => value === target ? 'bg-green-100 dark:bg-green-900' : ''); } return `<tr class="border-b dark:border-gray-700"><td class="p-2 text-gray-600 dark:text-gray-400">${label}</td>${selected.map((v, i) => `<td class="p-2 ${classes[i]}">${esc(display(v))}</td>`).join('')}</tr>`; }).join('')}</tbody></table>`;
   lastFocusedElement = document.activeElement;
@@ -66,4 +69,24 @@ document.getElementById('close').addEventListener('click', closeCompare);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !document.getElementById('modal').classList.contains('hidden')) closeCompare(); });
 document.getElementById('theme').addEventListener('click', () => { document.documentElement.classList.toggle('dark'); const dark = document.documentElement.classList.contains('dark'); localStorage.setItem('darkMode', dark); document.getElementById('theme-icon').textContent = dark ? '☀️' : '🌙'; });
 if (localStorage.getItem('darkMode') === 'true') { document.documentElement.classList.add('dark'); document.getElementById('theme-icon').textContent = '☀️'; }
-render();
+
+async function loadVehicles() {
+  const response = await fetch('./data/vehicles.json');
+  if (!response.ok) throw new Error(`Fahrzeugdaten konnten nicht geladen werden (${response.status}).`);
+  vehicles = await response.json();
+}
+
+async function init() {
+  try {
+    await loadVehicles();
+    render();
+  } catch (error) {
+    console.error(error);
+    document.getElementById('cards').innerHTML = `
+      <div class="rounded-lg border border-red-300 bg-red-50 p-6 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200" role="alert">
+        Die Fahrzeugdaten konnten nicht geladen werden. Bitte später erneut versuchen.
+      </div>`;
+  }
+}
+
+init();
