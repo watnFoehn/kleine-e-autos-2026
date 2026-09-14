@@ -50,7 +50,7 @@ function showCompare() {
     ['Länge', (v) => displayValue(v.laenge, ' m'), (v) => v.laenge, 'low'], ['Breite', (v) => displayValue(v.breite, ' m')], ['Höhe', (v) => displayValue(v.hoehe, ' m')],
     ['Kofferraum', (v) => displayValue(v.kofferraum, ' l'), (v) => v.kofferraum, 'high'], ['Sitze', (v) => displayValue(v.sitze)], ['ISOFIX', (v) => displayValue(v.isofix)]
   ];
-  document.getElementById('compare-content').innerHTML = `<table class="w-full text-sm"><thead><tr class="border-b dark:border-gray-700"><th class="p-2 text-left"></th>${selected.map((v) => `<th class="p-2 text-left font-bold">${esc(v.name)}</th>`).join('')}</tr></thead><tbody>${fields.map(([label, display, get, best]) => { let classes = selected.map(() => ''); if (get && best && selected.length > 1) { const values = selected.map(get); const target = best === 'high' ? Math.max(...values) : Math.min(...values); classes = values.map((value) => value === target ? 'bg-green-100 dark:bg-green-900' : ''); } return `<tr class="border-b dark:border-gray-700"><td class="p-2 text-gray-600 dark:text-gray-400">${label}</td>${selected.map((v, i) => `<td class="p-2 ${classes[i]}">${esc(display(v))}</td>`).join('')}</tr>`; }).join('')}</tbody></table>`;
+  document.getElementById('compare-content').innerHTML = `<table class="w-full text-sm"><caption class="sr-only">Vergleich der ausgewählten Fahrzeuge</caption><thead><tr class="border-b dark:border-gray-700"><th scope="col" class="p-2 text-left"></th>${selected.map((v) => `<th scope="col" class="p-2 text-left font-bold">${esc(v.name)}</th>`).join('')}</tr></thead><tbody>${fields.map(([label, display, get, best]) => { let classes = selected.map(() => ''); if (get && best && selected.length > 1) { const values = selected.map(get); const target = best === 'high' ? Math.max(...values) : Math.min(...values); classes = values.map((value) => value === target ? 'bg-green-100 dark:bg-green-900' : ''); } return `<tr class="border-b dark:border-gray-700"><th scope="row" class="p-2 text-left font-normal text-gray-600 dark:text-gray-400">${label}</th>${selected.map((v, i) => `<td class="p-2 ${classes[i]}">${esc(display(v))}</td>`).join('')}</tr>`; }).join('')}</tbody></table>`;
   lastFocusedElement = document.activeElement;
   document.getElementById('modal').classList.remove('hidden');
   document.getElementById('close').focus();
@@ -62,13 +62,44 @@ function closeCompare() {
   lastFocusedElement = null;
 }
 
+function getModalFocusableElements() {
+  return [...document.getElementById('modal').querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    .filter((element) => !element.hasAttribute('hidden'));
+}
+
+function updateThemeButton() {
+  const dark = document.documentElement.classList.contains('dark');
+  document.getElementById('theme').setAttribute('aria-label', dark ? 'Hellen Modus aktivieren' : 'Dunklen Modus aktivieren');
+  document.getElementById('theme-icon').textContent = dark ? '☀️' : '🌙';
+}
+
 document.getElementById('sort').addEventListener('change', render);
 document.getElementById('compare').addEventListener('click', showCompare);
 document.getElementById('clear').addEventListener('click', () => { compareList = []; updateBar(); render(); });
 document.getElementById('close').addEventListener('click', closeCompare);
-document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !document.getElementById('modal').classList.contains('hidden')) closeCompare(); });
-document.getElementById('theme').addEventListener('click', () => { document.documentElement.classList.toggle('dark'); const dark = document.documentElement.classList.contains('dark'); localStorage.setItem('darkMode', dark); document.getElementById('theme-icon').textContent = dark ? '☀️' : '🌙'; });
-if (localStorage.getItem('darkMode') === 'true') { document.documentElement.classList.add('dark'); document.getElementById('theme-icon').textContent = '☀️'; }
+document.addEventListener('keydown', (event) => {
+  const modal = document.getElementById('modal');
+  if (modal.classList.contains('hidden')) return;
+  if (event.key === 'Escape') {
+    closeCompare();
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const focusable = getModalFocusableElements();
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+});
+document.getElementById('theme').addEventListener('click', () => { document.documentElement.classList.toggle('dark'); localStorage.setItem('darkMode', document.documentElement.classList.contains('dark')); updateThemeButton(); });
+if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
+updateThemeButton();
 
 async function loadVehicles() {
   const response = await fetch('./data/vehicles.json');
